@@ -16,11 +16,13 @@ interface Props {
   code: string;
   patchData?: PatchGraphData;
   warnings?: ValidationIssue[];
+  // Code failed to execute, so there is no patch; tagged on view events for research
+  failed?: boolean;
 }
 
 type Tab = "patch" | "code";
 
-export function CodePatchTabs({ code, patchData, warnings }: Props) {
+export function CodePatchTabs({ code, patchData, warnings, failed = false }: Props) {
   const [activeTab, setActiveTab] = useState<Tab | null>(null); // null = collapsed (button gate)
   const [fullscreen, setFullscreen] = useState(false);
   const [validationOpen, setValidationOpen] = useState(false);
@@ -44,7 +46,7 @@ export function CodePatchTabs({ code, patchData, warnings }: Props) {
   const openTab = (tab: Tab) => {
     setActiveTab(tab);
     tabOpenTime.current = Date.now();
-    logEvent("view_open", { view: tab, variant });
+    logEvent("view_open", { view: tab, variant, failed });
   };
 
   const closeTabs = () => {
@@ -55,6 +57,7 @@ export function CodePatchTabs({ code, patchData, warnings }: Props) {
         durationMs: duration,
         wasGlance: duration < 3000,
         variant,
+        failed,
       });
     }
     setActiveTab(null);
@@ -65,11 +68,11 @@ export function CodePatchTabs({ code, patchData, warnings }: Props) {
   const switchTab = (tab: Tab) => {
     if (tabOpenTime.current && activeTab && activeTab !== tab) {
       const duration = Date.now() - tabOpenTime.current;
-      logEvent("view_close", { view: activeTab, durationMs: duration, wasGlance: duration < 3000, variant });
+      logEvent("view_close", { view: activeTab, durationMs: duration, wasGlance: duration < 3000, variant, failed });
     }
     setActiveTab(tab);
     tabOpenTime.current = Date.now();
-    logEvent("view_open", { view: tab, variant });
+    logEvent("view_open", { view: tab, variant, failed });
   };
 
   const toggleValidation = () => {
@@ -293,7 +296,9 @@ export function CodePatchTabs({ code, patchData, warnings }: Props) {
                   <path d="M8 18h8" />
                 </svg>
                 <span className="patch-placeholder-text">
-                  Patch visualization will appear here
+                  {failed
+                    ? "No patch: this code failed to run. Open the Code tab to see what was generated."
+                    : "Patch visualization will appear here"}
                 </span>
               </div>
             )

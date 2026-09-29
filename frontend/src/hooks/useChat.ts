@@ -123,7 +123,9 @@ export function useChat(runCode: RunCodeFn, pluginId: string | null) {
         if (plugin?.amxdStoragePath) {
           for (let i = docs.length - 1; i >= 0; i--) {
             const d = docs[i];
-            if (d.role === "assistant" && d.code && !d.amxdStoragePath) {
+            // Skip failed generations: they never produced an .amxd, so borrowing the
+            // plugin's path would show an earlier successful patch under the failed code
+            if (d.role === "assistant" && d.code && !d.error && !d.amxdStoragePath) {
               d.amxdStoragePath = plugin.amxdStoragePath;
               // Don't break — patch all legacy messages so every turn gets patch data
             }
@@ -429,7 +431,7 @@ export function useChat(runCode: RunCodeFn, pluginId: string | null) {
             });
             setMessages((prev) =>
               prev.map((m) =>
-                m.id === assistantId ? { ...m, error: errorMsg, status: "error", content: fullResponse } : m
+                m.id === assistantId ? { ...m, error: errorMsg, status: "error", content: fullResponse, code: rewritten } : m
               )
             );
             saveGeneration({

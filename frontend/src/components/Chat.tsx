@@ -407,7 +407,7 @@ export function Chat({ messages, isLoading, onSend, onTemplateBuild, pyodideRead
                       <p className="iteration-summary">{summaryText}</p>
                     )}
                     {isAssistantSettled && msg.code && (
-                      <CodePatchTabs code={msg.code} patchData={msg.patchData} warnings={msg.warnings} />
+                      <CodePatchTabs code={msg.code} patchData={msg.patchData} warnings={msg.warnings} failed={!!msg.error} />
                     )}
                     {isAssistantSettled && msg.description && (
                       <p className="plugin-description">{msg.description}</p>
